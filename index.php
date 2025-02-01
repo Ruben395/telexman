@@ -1,3 +1,4 @@
+<?php
 // Configuration
 const redirectUrl = "https://707e3565.45dea72c27a70fa75e4d6281.workers.dev"; // URL to redirect to
 const rateLimit = 5; // Max requests per IP per hour
